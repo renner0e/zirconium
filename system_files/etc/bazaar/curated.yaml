@@ -1,0 +1,95 @@
+# https://github.com/kolunmi/bazaar/blob/main/docs/overview.org
+
+css: |
+  .global-section banner {
+     margin-top: 30px;
+     margin-left: 30px;
+     margin-right: 30px;
+     border-radius: 12px;
+  }
+
+  .global-section banner-text-overlay {
+     margin: 30px;
+     padding: 20px;
+  }
+
+  .global-section banner-text {
+     padding: 50px;
+     text-shadow: 1px 1px 4px rgba(0, 0, 5, 1);
+  }
+
+  .global-section title {
+    text-shadow: 1px 1px 4px rgba(0, 0, 5, 1);
+  }
+
+  .global-section subtitle {
+    font-weight: 400;
+    text-shadow: 4px 4px 8px rgba(0, 0, 5, 1);
+  }
+
+  .global-section app-tile > button {
+    background-color: alpha(white, 0.1);
+  }
+
+  .global-section {
+    margin: 15px;
+    border-radius: 12px;
+    color: #ffffff;
+  }
+
+  .global-section app-tile-verified-check {
+    color: var(--fg-color);
+  }
+
+  .global-section app-tile-installed-indicator {
+    color: var(--fg-color);
+  }
+
+  .rec-section {
+    background: linear-gradient(0deg, #71bff6, #e1e0e1);
+  }
+
+  .chungus-section {
+    background: linear-gradient(0deg, #5f90f4, #dca6ff);
+  }
+
+rows:
+  - sections:
+      - expand-horizontally: true
+        classes:
+          - global-section
+        light-classes:
+          - rec-section
+        category:
+          title: "Zirconium shills"
+          subtitle: "Bottom Text"
+          banner: file:///run/host/etc/bazaar/mountains.jxl
+          banner-fit: cover
+          banner-text-halign: center
+          banner-text-valign: center
+          banner-height: 600
+          appids:
+            - io.github.gopher64.gopher64
+            - com.cassidyjames.butler
+            - moe.launcher.honkers-launcher
+            - to.bnt.sendworm
+
+  - sections:
+      - expand-horizontally: true
+        classes:
+          - global-section
+        light-classes:
+          - chungus-section
+        category:
+          title: "my pants"
+          subtitle: "chungus"
+          banner: file:///run/host/etc/bazaar/beach.jxl
+          banner-fit: cover
+          banner-text-halign: start
+          banner-text-valign: center
+          banner-height: 600
+          appids:
+            - com.google.Chrome
+            - io.github.deaen.awesomecalculator
+            - org.tryton.Tryton-76
+            - org.frozen_bubble.frozen-bubble

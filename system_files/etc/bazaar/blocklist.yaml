@@ -1,0 +1,3 @@
+blocklists:
+  - block:
+    - com.brave.Browser
