@@ -68,7 +68,7 @@ jobs:
         run: |
           # checks if image is rechunked here:
           # https://github.com/coreos/rpm-ostree/blob/653e6ee0ba5953665b2bc2606bd6ab89c3871454/rust/src/compose.rs#L511-L519
-          if skopeo inspect docker://"${BASELINE_IMAGE}" | jq -e '.LayersData[1:] | all(.Annotations?["ostree.components"]?)'; then
+          if skopeo inspect "docker://"${BASELINE_IMAGE}"" | jq -e '.LayersData[1:] | all(.Annotations?["ostree.components"]?)'; then
             echo "found ${BASELINE_IMAGE} in registry."
             echo "BASELINE_IMAGE=${BASELINE_IMAGE}" >> "$GITHUB_OUTPUT"
             echo "PULL_BASELINE_IMAGE=true" >> "$GITHUB_OUTPUT"
