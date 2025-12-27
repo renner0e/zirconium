@@ -61,8 +61,56 @@ jobs:
           BUILD_FLAVOR: ${{ matrix.flavor }}
         run: sudo podman build "--build-arg=BUILD_FLAVOR=${BUILD_FLAVOR}" -t "${IMAGE_NAME}:${DEFAULT_TAG}" -f ./Containerfile .
 
+      - name: Check Base Image Availability
+        id: check-baseline
+        env:
+          BASELINE_IMAGE: "${IMAGE_REGISTRY}/${IMAGE_NAME}:${DEFAULT_TAG}-${PLATFORM}"
+        run: |
+          # checks if image is rechunked here:
+          # https://github.com/coreos/rpm-ostree/blob/653e6ee0ba5953665b2bc2606bd6ab89c3871454/rust/src/compose.rs#L511-L519
+          if skopeo inspect docker://"${BASELINE_IMAGE}" | jq -e '.LayersData[1:] | all(.Annotations?["ostree.components"]?)'; then
+            echo "found ${BASELINE_IMAGE} in registry."
+            echo "BASELINE_IMAGE=${BASELINE_IMAGE}" >> "$GITHUB_OUTPUT"
+            echo "PULL_BASELINE_IMAGE=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "no baseline image with tag $BASELINE_IMAGE found in registry"
+            BASELINE_IMAGE="localhost/${{ env.IMAGE_NAME }}:${{ env.DEFAULT_TAG }}"
+            echo "BASELINE_IMAGE=${BASELINE_IMAGE}" >> "$GITHUB_OUTPUT"
+            echo "PULL_BASELINE_IMAGE=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Pull Baseline Image For Rechunker
+        id: pull-baseline
+        if: steps.check-baseline.outputs.PULL_BASELINE_IMAGE == 'true'
+        env:
+          BASELINE_IMAGE: ${{ steps.check-baseline.outputs.BASELINE_IMAGE }}
+        run: |
+          sudo podman pull ${BASELINE_IMAGE}
+
+      - name: debug
+        run: sudo podman images
+
+      - name: Rename Rechunker Baseline Image
+        id: retag-rechunk
+        if: steps.check-baseline.PULL_BASELINE_IMAGE == 'true'
+        env:
+          BASELINE_IMAGE: ${{ steps.pull-baseline.outputs.BASELINE_IMAGE }}
+        run: |
+          sudo podman tag \
+            ${BASELINE_IMAGE} \
+            localhost/${IMAGE_NAME}:${DEFAULT_TAG}
+          sudo podman image rm -i ${BASELINE_IMAGE}
+
+      - name: debug
+        run: sudo podman images
+
       - name: Rechunk Image
-        run: sudo podman run --rm --privileged -v /var/lib/containers:/var/lib/containers --entrypoint /usr/libexec/bootc-base-imagectl "localhost/${IMAGE_NAME}:${DEFAULT_TAG}" rechunk --max-layers 67 "localhost/${IMAGE_NAME}:${DEFAULT_TAG}" "localhost/${IMAGE_NAME}:${DEFAULT_TAG}"
+        env:
+          BASELINE_IMAGE: ${{ steps.pull-baseline.outputs.BASELINE_IMAGE }}
+        run: sudo podman run --rm --privileged -v /var/lib/containers:/var/lib/containers --entrypoint /usr/libexec/bootc-base-imagectl "localhost/${IMAGE_NAME}:${DEFAULT_TAG}" rechunk --max-layers 499 "localhost/${IMAGE_NAME}:${DEFAULT_TAG}" "${BASELINE_IMAGE}"
+
+      - name: debug
+        run: sudo podman images
 
       - name: Login to GitHub Container Registry
         if: github.event_name != 'pull_request' && github.ref == format('refs/heads/{0}', github.event.repository.default_branch)
