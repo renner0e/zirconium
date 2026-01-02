@@ -64,6 +64,32 @@ jobs:
       - name: Rechunk Image
         run: sudo podman run --rm --privileged -v /var/lib/containers:/var/lib/containers --entrypoint /usr/libexec/bootc-base-imagectl "localhost/${IMAGE_NAME}:${DEFAULT_TAG}" rechunk --max-layers 67 "localhost/${IMAGE_NAME}:${DEFAULT_TAG}" "localhost/${IMAGE_NAME}:${DEFAULT_TAG}"
 
+      - name: Setup Syft
+        id: setup-syft
+        if: github.event_name != 'pull_request' && github.ref == format('refs/heads/{0}', github.event.repository.default_branch)
+        uses: anchore/sbom-action/download-syft@a930d0ac434e3182448fe678398ba5713717112a # v0
+        with:
+          syft-version: v1.39.0
+
+      - name: Generate SBOM
+        id: generate-sbom
+        if: github.event_name != 'pull_request' && github.ref == format('refs/heads/{0}', github.event.repository.default_branch)
+        env:
+          SYFT_CMD: ${{ steps.setup-syft.outputs.cmd }}
+          OCI_DIR: "/tmp/image-oci-dir"
+        run: |
+          mkdir -p ${OCI_DIR}/rootfs
+          sudo podman container create --replace --name ${IMAGE_NAME}-tmp "localhost/${IMAGE_NAME}:${DEFAULT_TAG}"
+          sudo podman export ${IMAGE_NAME}-tmp | sudo tar -C ${OCI_DIR}/rootfs -xf -
+          sudo podman container rm ${IMAGE_NAME}-tmp
+
+          OUTPUT_PATH="$(mktemp -d)/sbom.json"
+          export SYFT_PARALLELISM=$(($(nproc)*2))
+          sudo $SYFT_CMD --source-name "${IMAGE_NAME}"-"${DEFAULT_TAG}" ${OCI_DIR} -o syft-json=${OUTPUT_PATH}
+          du -sh ${OUTPUT_PATH}
+          echo "OUTPUT_PATH=${OUTPUT_PATH}" >> $GITHUB_OUTPUT
+          sudo rm -rf ${OCI_DIR}
+
       - name: Login to GitHub Container Registry
         if: github.event_name != 'pull_request' && github.ref == format('refs/heads/{0}', github.event.repository.default_branch)
         env:
@@ -260,3 +286,17 @@ jobs:
 
             cosign sign -y --new-bundle-format=false --use-signing-config=false --key env://COSIGN_PRIVATE_KEY "${TARGET_MANIFEST}@$(< /tmp/digestfile)"
           done
+
+      - name: Add SBOM Attestation
+        if: github.event_name != 'pull_request' && github.ref == format('refs/heads/{0}', github.event.repository.default_branch)
+        shell: bash
+        env:
+          COSIGN_PRIVATE_KEY: ${{ secrets.SIGNING_SECRET }}
+          SBOM_PATH: ${{ steps.generate-sbom.outputs.OUTPUT_PATH }}
+          IMAGE_BASE: ${{ env.IMAGE_REGISTRY }}/${{ env.IMAGE_NAME }}
+        run: |
+          cosign attest -y \
+            --predicate "${SBOM_PATH}" \
+            --type spdxjson \
+            --key env://COSIGN_PRIVATE_KEY \
+            "${IMAGE_BASE}@$(< /tmp/digestfile)"
