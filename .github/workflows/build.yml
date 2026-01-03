@@ -289,7 +289,7 @@ jobs:
             cosign sign -y --new-bundle-format=false --use-signing-config=false --key env://COSIGN_PRIVATE_KEY "${TARGET_MANIFEST}@$(< /tmp/digestfile)"
 
             # SBOM attestation
-            cosign attest -y --new-bundle-format=false --predicate "${SBOM_OUTPUT}" --type spdxjson --key env://COSIGN_PRIVATE_KEY "${IMAGE_BASE}@$(< /tmp/digestfile)"
+            cosign attest -y --new-bundle-format=false --predicate "${SBOM_OUTPUT}" --type spdxjson --key env://COSIGN_PRIVATE_KEY "${TARGET_MANIFEST}@$(< /tmp/digestfile)"
 
           done
 
