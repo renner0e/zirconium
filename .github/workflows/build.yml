@@ -258,6 +258,8 @@ jobs:
           LABELS: ${{ steps.metadata.outputs.labels }}
           OUTPUT_CSV: ${{ steps.load-outputs.outputs.OUTPUT_CSV }}
           TAGS: ${{ steps.metadata.outputs.tags }}
+          SBOM_OUTPUT: ${{ steps.generate-sbom.outputs.OUTPUT_PATH }}
+          IMAGE_BASE: ${{ env.IMAGE_REGISTRY }}/${{ env.IMAGE_NAME }}
         run: |
           set -x
 
@@ -285,18 +287,9 @@ jobs:
             done <<< "${TAGS}"
 
             cosign sign -y --new-bundle-format=false --use-signing-config=false --key env://COSIGN_PRIVATE_KEY "${TARGET_MANIFEST}@$(< /tmp/digestfile)"
+
+            # SBOM attestation
+            cosign attest -y --new-bundle-format=false --predicate "${SBOM_OUTPUT}" --type spdxjson --key env://COSIGN_PRIVATE_KEY "${IMAGE_BASE}@$(< /tmp/digestfile)"
+
           done
 
-      - name: Add SBOM Attestation
-        if: github.event_name != 'pull_request' && github.ref == format('refs/heads/{0}', github.event.repository.default_branch)
-        shell: bash
-        env:
-          COSIGN_PRIVATE_KEY: ${{ secrets.SIGNING_SECRET }}
-          SBOM_OUTPUT: ${{ steps.generate-sbom.outputs.OUTPUT_PATH }}
-          IMAGE_BASE: ${{ env.IMAGE_REGISTRY }}/${{ env.IMAGE_NAME }}
-        run: |
-          cosign attest -y \
-            --predicate "${SBOM_OUTPUT}" \
-            --type spdxjson \
-            --key env://COSIGN_PRIVATE_KEY \
-            "${IMAGE_BASE}@$(< /tmp/digestfile)"
