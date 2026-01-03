@@ -292,11 +292,12 @@ jobs:
         shell: bash
         env:
           COSIGN_PRIVATE_KEY: ${{ secrets.SIGNING_SECRET }}
-          SBOM_PATH: ${{ steps.generate-sbom.outputs.OUTPUT_PATH }}
+          SBOM_OUTPUT: ${{ steps.generate-sbom.outputs.OUTPUT_PATH }}
           IMAGE_BASE: ${{ env.IMAGE_REGISTRY }}/${{ env.IMAGE_NAME }}
         run: |
+          cd "$(dirname "$SBOM_OUTPUT")"
           cosign attest -y \
-            --predicate "${SBOM_PATH}" \
+            --predicate ./sbom.json \
             --type spdxjson \
             --key env://COSIGN_PRIVATE_KEY \
             "${IMAGE_BASE}@$(< /tmp/digestfile)"
