@@ -295,9 +295,8 @@ jobs:
           SBOM_OUTPUT: ${{ steps.generate-sbom.outputs.OUTPUT_PATH }}
           IMAGE_BASE: ${{ env.IMAGE_REGISTRY }}/${{ env.IMAGE_NAME }}
         run: |
-          cd "$(dirname "$SBOM_OUTPUT")"
           cosign attest -y \
-            --predicate ./sbom.json \
+            --predicate "${SBOM_OUTPUT}" \
             --type spdxjson \
             --key env://COSIGN_PRIVATE_KEY \
             "${IMAGE_BASE}@$(< /tmp/digestfile)"
