@@ -23,6 +23,8 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6
+        with:
+          submodules: true
 
       - name: Maximize build space
         if: inputs.platform != 'arm64'
@@ -68,7 +70,7 @@ jobs:
             --privileged \
             -v /dev:/dev \
             -v "${SOURCE_DIR}:/output" \
-            -v ./iso:/iso \
+            -v ./assets/iso:/iso \
             registry.fedoraproject.org/fedora:latest \
             bash -c 'dnf install -y lorax \
             && mkdir /images \

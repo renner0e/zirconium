@@ -138,13 +138,10 @@ systemctl preset --global udiskie
 systemctl enable brew-setup.service
 systemctl enable flatpak-preinstall.service
 
-cp -rf /usr/share/zirconium/skel/* /etc/skel
 git clone "https://github.com/zirconium-dev/zdots.git" /usr/share/zirconium/zdots
-install -d /etc/niri/
-cp -f /usr/share/zirconium/zdots/dot_config/niri/config.kdl /etc/niri/config.kdl
-file /etc/niri/config.kdl | grep -F -e "empty" -v
-stat /etc/niri/config.kdl
-cp -f /usr/share/zirconium/pixmaps/watermark.png /usr/share/plymouth/themes/spinner/watermark.png
+install -Dpm0644 -t /usr/share/plymouth/themes/spinners/ /ctx/assets/logos/watermark.png
+install -Dpm0644 -t /usr/share/zirconium/skel/Pictures/Wallpapers/ /ctx/assets/wallpapers/*
+install -Dpm0644 -t /usr/share/zirconium/pixmaps/ /ctx/assets/logos/logo-z.svg
 
 mkdir -p "/usr/share/fonts/Maple Mono"
 
