@@ -20,9 +20,9 @@ After=local-fs.target
 
 [Service]
 Type=oneshot
-ExecStart=rechunker-group-fix /etc/group
-ExecStart=rechunker-group-fix /etc/gshadow
+ExecStart=rm -f /etc/gshadow
 ExecStart=systemd-sysusers
+ExecStart=rechunker-group-fix
 ExecStart=systemd-tmpfiles --create --remove --boot --exclude-prefix=/dev
 
 [Install]
