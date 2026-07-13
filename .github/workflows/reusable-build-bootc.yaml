@@ -21,11 +21,6 @@ on:
         required: false
         type: string
         default: "amd64,arm64"
-      rechunk:
-        description: "Rechunk the build"
-        required: false
-        type: boolean
-        default: true
       publish:
         description: "Publish this image"
         required: false
@@ -126,7 +121,6 @@ jobs:
           env IMAGE_FULL="localhost/${IMAGE_NAME}:${DEFAULT_TAG}" $(which just) load
 
       - name: Rechunk image
-        if: inputs.rechunk
         run: |
           set -e
           env IMAGE_FULL="localhost/${IMAGE_NAME}:${DEFAULT_TAG}" $(which just) rechunk
