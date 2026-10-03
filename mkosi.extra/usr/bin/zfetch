@@ -1,7 +1,12 @@
 #!/usr/bin/env bash
 
+BLESS="$HOME/.config/zirconium/golden-experience"
 if [ "$(( RANDOM % 67 ))" -eq 0 ]; then
-  exec hyfetch --ascii-file=/usr/share/zirconium/legally-distinct.txt "${@}"
+  if [ -f "${BLESS}" ]; then
+    exec hyfetch --ascii-file=/usr/share/zirconium/legally-distinct.txt --preset "#FFD54A" "${@}"
+  else
+    exec hyfetch --ascii-file=/usr/share/zirconium/legally-distinct.txt "${@}"
+  fi
 else
   exec hyfetch --ascii-file=/usr/share/zirconium/zirconium.txt "${@}"
 fi

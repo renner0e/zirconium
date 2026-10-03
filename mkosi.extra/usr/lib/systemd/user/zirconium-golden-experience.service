@@ -1,0 +1,14 @@
+[Unit]
+Description=Zirconium Golden Experience
+ConditionFraction=6.7%
+
+[Service]
+Type=oneshot
+ConditionPathExists=!%h/.config/zirconium/golden-experience
+# ConditionFraction needs 261+
+ExecCondition=/bin/sh -c 'test $$(systemctl --version | head -n1 | cut -d" " -f2) -ge 261'
+ExecStart=mkdir -p %h/.config/zirconium
+ExecStart=touch %h/.config/zirconium/golden-experience
+
+[Install]
+WantedBy=default.target
